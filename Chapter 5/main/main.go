@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sort"
+	"strconv"
 )
 
 func main() {
@@ -41,8 +43,140 @@ func main() {
 
 	myFuncVariable = f1
 	fmt.Println(myFuncVariable("Hello, World!"))
+	// El valor default para variables de funciones es nil
 	myFuncVariable = f2
 	fmt.Println(myFuncVariable("Hello, World!"))
+
+	calculatorExample()
+	anonymousFunctionExample()
+
+	// Closures ejemplo
+	closureExample()
+	usingClosureToSortData()
+
+	// Retornando funciones de funciones con closures
+	twoBase := makeMult(3)
+	threeBase := makeMult(3)
+	twoBase(2)
+	threeBase(3)
+}
+
+func makeMult(base int) func(int) int {
+	return func(factor int) int {
+		return base * factor
+	}
+}
+
+func usingClosureToSortData() {
+	type Person struct {
+		FirstName string
+		LastName  string
+		Age       int
+	}
+
+	people := []Person{
+		{"Pat", "Patterson", 37},
+		{"Tracy", "Bobdaughter", 23},
+		{"Fred", "Fredson", 18},
+	}
+
+	fmt.Println(people)
+
+	sort.Slice(people, func(i, j int) bool {
+		return people[i].LastName < people[j].LastName
+	})
+
+	fmt.Println(people)
+}
+
+func closureExample() {
+	a := 20
+	f := func() {
+		fmt.Println("a is", a)
+		a = 30 // Esta función puede leer y modificar el valor de a, incluso sin haber sido declarada y sin haber sido pasada como argumento
+		// También puede suceder shadowing de la variable
+		a := 40
+		fmt.Println("inner a is", a)
+	}
+	f()
+	fmt.Println("a is", a)
+}
+
+func anonymousFunctionExample() {
+	f := func(j int) {
+		fmt.Println("printing", j, "from inside of an anonymous function")
+	}
+
+	for i := 0; i < 5; i++ {
+		f(i)
+		// No es necesario asignar una función anónima a una variable
+		func(j int) {
+			fmt.Println("printing", j, "from inside of an anonymous function")
+		}(i)
+	}
+}
+
+func calculatorExample() {
+	expressions := [][]string{
+		{"2", "+", "3"},
+		{"2", "-", "3"},
+		{"2", "*", "3"},
+		{"2", "/", "3"},
+		{"2", "%", "3"},
+		{"two", "+", "three"},
+		{"5"},
+	}
+
+	for _, expression := range expressions {
+		if len(expression) != 3 {
+			fmt.Println("invalid expression:", expression)
+			continue
+		}
+		pl, err := strconv.Atoi(expression[0])
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
+		op := expression[1]
+		opFunc, ok := opMap[op]
+
+		if !ok {
+			fmt.Println("unsupported operator:", op)
+			continue
+		}
+
+		p2, err := strconv.Atoi(expression[2])
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		result := opFunc(pl, p2)
+		fmt.Println(result)
+	}
+}
+
+var opMap = map[string]func(int, int) int{
+	"+": add,
+	"-": sub,
+	"*": mul,
+	"/": divCalc,
+}
+
+func add(i int, j int) int {
+	return i + j
+}
+
+func sub(i int, j int) int {
+	return i - j
+}
+
+func mul(i int, j int) int {
+	return i * j
+}
+
+func divCalc(i int, j int) int {
+	return i / j
 }
 
 func f1(a string) int {
