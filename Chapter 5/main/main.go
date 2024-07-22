@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"errors"
 	"fmt"
+	"io"
+	"log"
 	"os"
 	"sort"
 	"strconv"
@@ -59,6 +63,95 @@ func main() {
 	threeBase := makeMult(3)
 	twoBase(2)
 	threeBase(3)
+
+	// Defer
+	deferExample()
+	deferAdvancedExample()
+	_, closer, err := getFileExample(os.Args[1])
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer closer()
+}
+
+func getFileExample(name string) (*os.File, func(), error) {
+	file, err := os.Open(name)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return file, func() {
+		file.Close()
+	}, nil
+}
+
+// Defer para abortar transacciones en caso de error
+func deferWithNamedReturnParameters(ctx context.Context, db *sql.DB, value1, value2 string) (err error) {
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err == nil {
+			err = tx.Commit()
+		}
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	_, err = tx.ExecContext(ctx, "INSERT INTO table (value1, value2) VALUES (?, ?)", value1, value2)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func deferAdvancedExample() int {
+	a := 10
+	defer func(val int) {
+		fmt.Println("first:", val)
+	}(a)
+
+	a = 20
+
+	defer func(val int) {
+		fmt.Println("second", val)
+	}(a)
+
+	a = 30
+	fmt.Println("exiting", a)
+	return a
+}
+
+func deferExample() {
+	fmt.Println(os.Args)
+	if len(os.Args) < 2 {
+		log.Fatal("no file specified")
+	}
+
+	f, err := os.Open(os.Args[1])
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer f.Close()
+
+	data := make([]byte, 2048)
+	for {
+		count, err := f.Read(data)
+		os.Stdout.Write(data[:count])
+
+		if err != nil {
+			if err != io.EOF {
+				log.Fatal(err)
+			}
+			break
+		}
+	}
 }
 
 func makeMult(base int) func(int) int {

@@ -10,5 +10,8 @@ vet: fmt
 build: vet
 	go build
 
+run:
+	go run ./main/main.go ./archivo.txt
+
 clean:
-	rm -f main
+	rm -f ./main/main
