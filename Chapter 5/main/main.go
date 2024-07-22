@@ -72,6 +72,61 @@ func main() {
 		log.Fatal(err)
 	}
 	defer closer()
+
+	// Go is Call by Value
+	callByValueExample()
+	callByValueMapsAndSlice()
+}
+
+func callByValueMapsAndSlice() {
+	// Los maps y slices son referencias a estructuras de datos, por lo tanto, al modificar un map o slice dentro de una función
+	// se modifica el map o slice original
+	modMap := func(m map[int]string) {
+		m[2] = "hello"
+		m[3] = "goodbye"
+		delete(m, 1)
+	}
+
+	modSlice := func(s []int) {
+		for k, v := range s {
+			s[k] = v * 2
+		}
+		s = append(s, 10)
+	}
+
+	m := map[int]string{
+		1: "first",
+		2: "second",
+	}
+
+	modMap(m)
+	fmt.Println(m)
+
+	s := []int{1, 2, 3}
+	modSlice(s)
+	fmt.Println(s)
+}
+
+func callByValueExample() {
+	// Incluso cuando se pasa un struct como argumento, el struct es copiado y no modificado
+	type Person struct {
+		age  int
+		name string
+	}
+
+	// En este caso, la función no modifica los valores de los argumentos
+	modifyFails := func(i int, s string, p Person) {
+		i = i * 2
+		s = "Goodbye"
+		p.name = "Bob"
+	}
+
+	p := Person{}
+	i := 2
+	s := "Hello"
+	modifyFails(i, s, p)
+	fmt.Println(i, s, p)
+
 }
 
 func getFileExample(name string) (*os.File, func(), error) {
